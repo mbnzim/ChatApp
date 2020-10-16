@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 final _firestore = FirebaseFirestore.instance;
 auth.User loggedInUser;
@@ -15,7 +16,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final messageTextController = TextEditingController();
   final _auth = auth.FirebaseAuth.instance;
-  bool buttunActive = false;
+  bool buttonActive = false;
 
   String messageText;
   void getCurrentUser() async {
@@ -23,7 +24,6 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       if (user != null) {
         loggedInUser = user;
-        print(loggedInUser.email);
       }
     } catch (e) {
       print(e);
@@ -39,13 +39,12 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFD2D3C9),
       appBar: AppBar(
-        leading: null,
         actions: <Widget>[
           IconButton(
               icon: Icon(Icons.close),
               onPressed: () {
-                //uysessagesStream();
                 _auth.signOut();
                 Navigator.pop(context);
               }),
@@ -60,27 +59,36 @@ class _ChatScreenState extends State<ChatScreen> {
           children: <Widget>[
             MessagesStream(),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10.0),
+              height: 50.0,
+              margin: EdgeInsets.all(15.0),
+              decoration: kRoudedTextField,
+              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 3.0),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Expanded(
                     child: TextField(
-                      controller: messageTextController,
-                      onChanged: (value) {
-                        messageText = value;
-                        setState(() {
-                          messageText == ""
-                              ? buttunActive = false
-                              : buttunActive = true;
-                        });
-                        // print(buttunActive);
-                      },
-                      decoration: kMessageTextFieldDecoration.copyWith(
-                          hintText: 'Type message....'),
-                    ),
+                        textInputAction: TextInputAction.newline,
+                        keyboardType: TextInputType.multiline,
+                        maxLines: null,
+                        expands: true,
+                        style: TextStyle(
+                          fontSize: 20.0,
+                        ),
+                        controller: messageTextController,
+                        onChanged: (value) {
+                          messageText = value;
+                          setState(() {
+                            messageText == ""
+                                ? buttonActive = false
+                                : buttonActive = true;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Type message...',
+                          border: InputBorder.none,
+                        )),
                   ),
-                  buttunActive == true
+                  buttonActive == true
                       ? FlatButton(
                           onPressed: () {
                             messageTextController.clear();
@@ -90,11 +98,13 @@ class _ChatScreenState extends State<ChatScreen> {
                               'messageTime': DateTime.now()
                             });
                             setState(() {
-                              buttunActive = false;
+                              buttonActive = false;
                             });
+                            // print(DateTime.now().hour.toString() +':'+DateTime.now().minute.toString() );
                           },
                           child: Text(
                             'Send',
+                            textAlign: TextAlign.end,
                             style: kSendButtonTextStyle,
                           ),
                         )
@@ -131,6 +141,9 @@ class MessagesStream extends StatelessWidget {
         for (var message in messages) {
           final messageText = message.data()['text'];
           final messageSender = message.data()['sender'];
+          final time = message.data()['messageTime'].toDate();
+
+          //  String timem = DateFormat.jm(time).toString();
 
           final currentUser = loggedInUser.email;
 
@@ -138,6 +151,7 @@ class MessagesStream extends StatelessWidget {
             //sender: messageSender,
             sender: '',
             text: messageText,
+            time: time,
             isMe: currentUser == messageSender,
           );
 
@@ -146,7 +160,7 @@ class MessagesStream extends StatelessWidget {
         return Expanded(
           child: ListView(
             reverse: true,
-            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
             children: messageBubbles,
           ),
         );
@@ -159,8 +173,9 @@ class MessageBubble extends StatelessWidget {
   final String sender;
   final String text;
   final bool isMe;
+  final time;
 
-  MessageBubble({this.sender, this.text, this.isMe});
+  MessageBubble({this.sender, this.text, this.isMe, this.time});
 
   @override
   Widget build(BuildContext context) {
@@ -170,10 +185,10 @@ class MessageBubble extends StatelessWidget {
         crossAxisAlignment:
             isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          Text(
-            sender,
-            style: TextStyle(color: Colors.black54),
-          ),
+          // Text(
+          //   sender,
+          //   style: TextStyle(color: Colors.black54),
+          // ),
           Material(
             borderRadius: isMe
                 ? BorderRadius.only(
@@ -188,14 +203,29 @@ class MessageBubble extends StatelessWidget {
                   ),
             elevation: 5.0,
             color: isMe ? Colors.lightBlueAccent : Colors.white,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 15.0),
-              child: Text(
-                text,
-                style: TextStyle(
-                  color: isMe ? Colors.white : Colors.black54,
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                        color: isMe ? Colors.white : Colors.black54,
+                        fontSize: 20.0),
+                  ),
                 ),
-              ),
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                  child: Text(
+                    DateFormat.jm().format(time),
+                    style: TextStyle(
+                        color: isMe ? Colors.white : Colors.black54,
+                        fontSize: 10.0),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
