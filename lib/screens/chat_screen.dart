@@ -100,7 +100,6 @@ class _ChatScreenState extends State<ChatScreen> {
                             setState(() {
                               buttonActive = false;
                             });
-                            // print(DateTime.now().hour.toString() +':'+DateTime.now().minute.toString() );
                           },
                           child: Text(
                             'Send',
@@ -143,8 +142,7 @@ class MessagesStream extends StatelessWidget {
           final messageSender = message.data()['sender'];
           final time = message.data()['messageTime'].toDate();
 
-          //  String timem = DateFormat.jm(time).toString();
-
+     
           final currentUser = loggedInUser.email;
 
           final messageBubble = MessageBubble(
