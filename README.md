@@ -1,2 +1,2 @@
-Chat App 
+ChatApp v0.1 
 
